@@ -1,0 +1,251 @@
+# C#
+using System.ComponentModel.DataAnnotations;
+
+[Reqired(ErrorMessage = "Message")]
+
+[MaxLength(200)]
+
+[ReqularExpresssion(@"[a-z]"), ErrorMessage = "Messsage"]
+
+[DisplayName("Nazev")]
+## MVC
+
+- Model - Data a logika... Třídy. Když je potřeba práce s daty, validace, počítání. Data z db, formuláře...
+- View - HTML stránka (Razor .cshtml). Prezentace uživateli, co se vykresluje.
+- Controller - Příjmá požadavky (http request), pracuje s modely, vrací view. Když je potřeba reagovat na URL, akci uživatele
+
+#### Workflow
+
+- Otevře URL (Product/Detail/1)
+- Controller ProductController zacyhtí požadavek
+- Načte data (Model)
+- Pošle data do View
+- Vykreslí HTML
+
+#### připojení DB
+
+- appsettings.json
+    - "ConnectionStrings": {
+    "DefaultConnection": "Data Source=rrs.db"
+  }
+- HomeController - Načte data a udělá list
+
+    - **Dapper**
+    ```
+    using var connection = new SqliteConnection("Data Source=rss.db");
+    var rss = connection.Query<Rss>("SELECT * FROM Rss").ToList();
+    return View(rss);
+    ```
+- Models/Rss - Třída Rss se kterou se pracuje
+- Views/Home/Index
+    - ``@model List<Rss> //Nahoře``
+    ```
+    <table>
+    @foreach (var item in Model){
+    <tr>
+        <td>@item.Name</td>
+        <td>@item.Url</td>
+        <td>@item.Description</td>
+        <td>@item.Label</td>
+        <td><a asp-action="Edit" asp-route="@item.Id">Upravit</a><a asp-action="Delete" asp-route="@item.Id">Smazat</a></td>
+    </tr>
+    }
+    </table>
+- ``asp-action="Edit"`` - Zavolá ``IActionResult Edit()``
+- ``asp-route-id="@item.Id"`` - Pošle id ``IActionResult Edit(int id)``
+
+#### Load jednoho záznamu (Dapper)
+```
+using var connection = new SqliteConnection("DataSource=rss.db");
+var rss = connection.QueryFirstOrDefault<Rss>("Select * from Rss where Id = @Id", new { Id = id });
+return View(rss);
+```
+#### Formulář ve View
+- Třída Rss.cs
+```
+@model Rss
+@using (Html.BeginForm()){
+    @Html.LabelFor(x => x.Name)
+    @Html.TextBoxFor(x => x.Name)
+    @Html.ValidationMessageFor(x => x.Name)
+    <button type="submit">Uložit</button>
+}
+```
+```
+    @Html.LabelFor(x => x.Label)
+    @Html.DropDownListFor(x => x.Label,
+        new SelectList(new[]
+            {
+                "Zprávy",
+                "Technologie a věda",
+                "Volný čas"
+            }))
+    @Html.ValidationMessageFor(x => x.Label)
+```
+
+#### Controller
+- Otevře se při spuštění
+```
+[HttpGet]
+public IActionResult Create(){}
+```
+- Otevře se po odeslání formuláře
+```
+[HttpPost]
+public IActionResult Create(Rss rss)
+```
+- Validace formuláře
+    ``ModelState.IsValid``
+#### Editace
+- Musí být ``HidenFor`` aby vědel s čím pracuje (podle Id)
+```
+@model Rss
+@using (Html.BeginForm())
+{
+    @Html.HiddenFor(x => x.Id)
+    <div>
+        @Html.LabelFor(x => x.Name)
+        @Html.TextBoxFor(x => x.Name)
+        @Html.ValidationMessageFor(x => x.Name)
+    </div>
+    <button type="submit">Uložit změny</button>
+}
+```
+#### XML
+```
+List<Article> articles = new List<Article>();
+foreach(var source in rss)
+{
+    try {
+        var xml = XDocument.Load(source.Url);
+        var items = xml.Descendants("item");
+        foreach (var item in items) {
+            articles.Add(new Article {
+                Title = item.Element("title")?.Value,
+                Description = item.Element("description")?.Value,
+                PubDate = item.Element("pubDate")?.Value
+            });
+        }
+    }catch(Exception) { }
+}
+```
+
+## XML
+- Načtení
+```
+XDocument doc = XDocument.Load("data.xml"); // .Load(Url)
+foreach(var item in doc.Descendants("item")){
+    string name = item.Element("title")?.Value;
+    int id = int.Parse(item.Element("id")?.Value)
+}
+```
+- Vytvoření
+```
+XDocument doc = new XDocument(
+    new XElement("people", new XElement("person",
+                                new XElement("name", "Jan"),
+                                new XElement("age", "20"),
+                            )
+    )
+);
+doc.Save("output.xml");
+```
+- Serializace
+```
+public class Person
+{
+    public string Name { get; set; }
+    public int Age { get; set; }
+}
+
+Person person = new Person { Name = "Jan", Age = 30 };
+XmlSerializer serializer = new XmlSerializer(typeof(Person));
+using StreamWriter writer = new StreamWriter("person.xml");
+    serializer.serialize(writer, person)
+```
+- Deserializace
+```
+using StreamReader reader = new StreamReader("person.xml")
+    Person p = (Person)serializer.Deserialize(reader);
+    Console.WriteLine(p.Name);
+```
+## Json
+- Třída
+```
+public class Person
+{
+    public string Name { get; set; }
+    public int Age { get; set; }
+}
+```
+- Serializace
+```
+Person person = new Person { Name = "Jan", Age = 30 };
+string json = JsonSerializer.Serialize(person);
+```
+- Deserializace
+```
+string json = "{\"Name\":\"Jan\",\"Age\":30}";
+Person person = JsonSerializer.Deserialize<Person>(json);
+```
+- **Pole**
+```
+var people = new Person[]
+{
+    new Person { Name = "Jan", Age = 30 },
+    new Person { Name = "Eva", Age = 25 },
+    new Person { Name = "Petr", Age = 40 }
+};
+
+//serializace
+string json = JsonSerializer.Serialize(people);
+//deserializace
+Person[] people = JsonSerializer.Deserialize<Person[]>(json);
+```
+- **List**
+```
+List<Person> people = JsonSerializer.Deserialize<List<Person>>(json);
+```
+
+## HTTPClient
+- Get
+```
+HttpClient client = new HttpClient();
+string url = "https://api.example.com/users";
+string response = await client.GetStringAsync(url);
+```
+
+- Post
+
+```
+HttpClient client = new HttpClient();
+string json = JsonSerializer.Serialize(person);
+StringContent content = new StringContent(json, Encoding.UTF8, "application/json");
+HttpResponseMessage response = await client.PostAsync("https://api.example.com/users", content);
+string result = await response.Content.ReadAsStringAsync();
+```
+
+- Kontrola statusu:
+    - ``response.IsSuccessStatusCode``
+    - ``response.EnsureSuccesStatusCode()`` - vyhodí vyjímku jestli status není 2xx
+- Použití await musí být v async funkci: ``static async Task Main()``
+- Hlavičky
+```
+client.DefaultRequestHeaders.Add("Authorization", "Bearer TOKEN123");
+```
+- GetStringAsync
+    - HttpClient
+    - Vrací string
+    - Nemá přístup k hlavičkám
+    ```
+    string content = await client.GetStringAsync("https://jsonplaceholder.typicode.com/posts/1");
+    ```
+- ReadAsStringAsync
+    - HttpContent
+    - Vrací string
+    - Má přístup k hlavičkám přes HttpResponseMessage
+    ```
+    HttpResponseMessage response = await client.GetAsync("https://jsonplaceholder.typicode.com/posts/1");
+    response.EnsureSuccessStatusCode();
+    string content = await response.Content.ReadAsStringAsync();
+    ```
