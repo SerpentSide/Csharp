@@ -249,3 +249,20 @@ client.DefaultRequestHeaders.Add("Authorization", "Bearer TOKEN123");
     response.EnsureSuccessStatusCode();
     string content = await response.Content.ReadAsStringAsync();
     ```
+
+## DB
+#### Inicializace
+- appsettings.json
+    - ``"ConnectionStrings": {
+    "DefaultConnection": "Data Source=rrs.db"
+  }``
+- Když chce service tak tam, jinak klidně Main/Program
+    - ```
+        private string _connectionString = "Data Source=rrs.db";
+        private SqliteConnection _connection;
+        _connection = new SqliteConnection(_connectionString);
+      ```
+#### Use Dapper
+- ``_connection.Execute("CREATE TABLE A Id INTEGER AUTOINCREMENT;");    //Inicializace``
+- ``_connection.Query<Rss>("Select * from Rss").ToList();               //List<Rss>``
+- ``_connection.Execute("Insert into Exchange(Name, Email, Currency, Value) VALUES (@Name, @Email, @Currency, @Value)", form);  //Insert``
