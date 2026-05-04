@@ -266,3 +266,33 @@ client.DefaultRequestHeaders.Add("Authorization", "Bearer TOKEN123");
 - ``_connection.Execute("CREATE TABLE A Id INTEGER AUTOINCREMENT;");    //Inicializace``
 - ``_connection.Query<Rss>("Select * from Rss").ToList();               //List<Rss>``
 - ``_connection.Execute("Insert into Exchange(Name, Email, Currency, Value) VALUES (@Name, @Email, @Currency, @Value)", form);  //Insert``
+
+## WPF
+Tag-like struktura
+```
+<StackPanel>
+    <TextBox Name="tbText" MaxLength="100">Text</TextBox>
+</StackPanel>
+```
+
+``
+<Button Name="btnSend" Background="Pink"Click="btnSend_Click">
+Odeslat</Button>
+``
+- Otevření dialogu
+    - Pravé tlačítko na řešení -> Add -> Window
+    - V kódu
+    ```
+    MyNewCreatedWindow window = new MyNewCreatedWindow();
+    window.Show();
+    ```
+- Výpis všech záznamů
+    - xaml
+    ```
+    <DataGrid Name="dgCompany" AutoGenerateColumns="True"/>
+    ```
+    - .cs
+    ```
+    List<Company> c = ... ;//list, třeba přes Dapper
+    dgCompany.ItemSource = c;
+    ```
