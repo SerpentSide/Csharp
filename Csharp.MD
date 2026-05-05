@@ -296,3 +296,89 @@ Odeslat</Button>
     List<Company> c = ... ;//list, třeba přes Dapper
     dgCompany.ItemSource = c;
     ```
+#### Prvky
+- ComboBox
+```
+    <ComboBox Name=cbCity>
+        <ComboBoxItem Content="Ostrava"/>
+        <ComboBoxItem Content="Praha"/>
+        <ComboBoxItem Content="Brno"/>
+    </ComboBox>
+    //------------ .cs -----------------
+    string selected = cbCity.SelectedItem?.ToString();
+```
+- DataGrid
+```
+  <DataGrid Name="dgSubjekt" AutoGenerateColumns="False" Height="200">
+      <DataGrid.Columns>
+          <DataGridTextColumn Header="Název" Binding="{Binding Name}"/>
+          <DataGridTextColumn Header="Ičo" Binding="{Binding Ico}"/>
+          <DataGridTextColumn Header="Datum" Binding="{Binding Date}"/>
+          <DataGridTemplateColumn Header="Editace">
+              <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                      <Button Content="Edit" Click="Button_Click_1"/>
+                  </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+      </DataGrid.Columns>
+  </DataGrid>
+  //------------- .cs -------------------
+  dgSubjekt.ItemsSource = subs; //List<Subjekt>;
+  //------------ Button click -----------
+  private void Button_Click_1(object sender, RoutedEventArgs e)
+  {
+    var button = sender as Button;
+    Subjekt item = button?.DataContext as Subjekt;
+  }
+```
+- "všechny změny se hned projeví" = naschle příští rok :)
+```
+ public class Subjekt : INotifyPropertyChanged
+ {
+     private string? _name;
+     private int? _ico;
+     private string? _date;
+     public string? Name
+     {
+         get => _name;
+         set
+         {
+             _name = value;
+             OnPropertyChanged(nameof(Name));
+         }
+     }
+     public int? Ico
+     {
+         get => _ico;
+         set
+         {
+             _ico = value;
+             OnPropertyChanged(nameof(Ico));
+         }
+     }
+     public string? Date
+     {
+         get => _date;
+         set
+         {
+             _date = value;
+             OnPropertyChanged(nameof(Date));
+         }
+     }
+     public event PropertyChangedEventHandler? PropertyChanged;
+     protected void OnPropertyChanged(string name)
+     {
+         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+     }
+ }
+ //------------- .xaml -------------------
+ <StackPanel>
+    <TextBlock>Název</TextBlock>
+    <TextBox x:Name="tbName" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
+    <TextBlock>Ico</TextBlock>
+    <TextBox x:Name="tbIco" Text="{Binding Ico, UpdateSourceTrigger=PropertyChanged}"/>
+    <TextBlock>Datum</TextBlock>
+    <TextBox x:Name="tbDate" Text="{Binding Date, UpdateSourceTrigger=PropertyChanged}"/>
+</StackPanel>
+```
