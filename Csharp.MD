@@ -382,3 +382,20 @@ Odeslat</Button>
     <TextBox x:Name="tbDate" Text="{Binding Date, UpdateSourceTrigger=PropertyChanged}"/>
 </StackPanel>
 ```
+
+## Reflexe (je to takzvaně "joever" :skull:)
+```
+public void Save(Object obj, string path)
+{
+    if (obj == null) { return; }
+    var sb = new StringBuilder();
+    var properties = obj.GetType().GetProperties();
+    foreach (var prop in properties) {
+        if (prop.PropertyType != typeof(string)) continue;
+        var value = prop.GetValue(obj) as string;
+        sb.AppendLine($"#{prop.Name} => {value};");
+    }
+    File.WriteAllText(path, sb.ToString());
+
+}
+```
