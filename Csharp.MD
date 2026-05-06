@@ -47,7 +47,7 @@ using System.ComponentModel.DataAnnotations;
         <td>@item.Url</td>
         <td>@item.Description</td>
         <td>@item.Label</td>
-        <td><a asp-action="Edit" asp-route="@item.Id">Upravit</a><a asp-action="Delete" asp-route="@item.Id">Smazat</a></td>
+        <td><a asp-action="Edit" asp-route-id="@item.Id">Upravit</a><a asp-action="Delete" asp-route-id="@item.Id">Smazat</a></td>
     </tr>
     }
     </table>
@@ -398,4 +398,71 @@ public void Save(Object obj, string path)
     File.WriteAllText(path, sb.ToString());
 
 }
+```
+
+
+## Final random code
+```
+using System.Text;
+using System.Text.Json;
+using System.Xml.Linq;
+using System.Xml.Serialization;
+
+namespace WebApplication1
+{
+    public class ReflexionService
+    {
+        public void Save(Object obj, string path)
+        {
+            StringBuilder sb = new StringBuilder();
+            if (obj == null) { return; }
+            var properties = obj.GetType().GetProperties();
+            foreach (var property in properties)
+            {
+                var value = property.GetValue(obj);
+                sb.AppendLine($"#{property.Name} => {value};");
+            }
+            File.WriteAllText(path, sb.ToString());
+        }
+        public void GetXml()
+        {
+            //XDocument document = XDocument.Parse("Ahoj"); //From string
+            XDocument document = XDocument.Load("Url|Data.xml");
+            var children = document.Descendants("Item");
+            foreach (var child in children)
+            {
+                string name = child.Element("name")?.Value;
+            }
+            XmlSerializer serializer = new XmlSerializer(typeof(string));
+            using StreamWriter sw = new StreamWriter("Outputfile.xml");
+            serializer.Serialize(sw, document);
+
+            using StreamReader sr = new StreamReader("InputFile.xml");
+            string xml = (string)serializer.Deserialize(sr);
+        }
+
+        public void GetJson()
+        {
+            string json = "JsonString";
+            List<string> list = JsonSerializer.Deserialize<List<string>>(json);
+        }
+
+        public async void Http() {
+            HttpClient client = new HttpClient();
+            //client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "token"); //Same thing
+            client.DefaultRequestHeaders.Add("Authorization", "Bearer token");
+            string json = "String";
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await client.PostAsync(json, content);
+            var content2 = await client.GetStringAsync("Url"); //Pouze obsah
+            //I hlavicka a body -> response2.Headers
+            var response2 = await client.GetAsync("Url");
+            string content3 = await response2.Content.ReadAsStringAsync();
+        }
+        public void DB() {
+        
+        }
+    }
+}
+
 ```
